@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        
+        .search-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ccc;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-export {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            margin-left: 10px;
+        }
+        
+        .results-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .business-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .business-item {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .business-item:hover {
+            border-color: #555;
+            transform: translateY(-1px);
+        }
+        
+        .business-item.no-website {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(139, 195, 74, 0.15) 100%);
+            border: 1px solid #4caf50;
+            box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+        }
+        
+        .no-website-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .business-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+        
+        .business-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        
+        .loading p {
+            color: #888;
+        }
+        
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Business Scraper</h1>
+            <p>Find businesses without websites for potential outreach</p>
+        </div>
+        
+        <div class="search-card">
+            <form id="searchForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" required placeholder="e.g., San Francisco">
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state" name="state" required placeholder="e.g., CA" maxlength="2">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="radius">Radius (miles)</label>
+                        <input type="number" id="radius" name="radius" value="5" min="1" max="25">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="barbershop">Barbershops</option>
+                            <option value="dentist">Dentists</option>
+                            <option value="electrician">Electricians</option>
+                            <option value="plumber">Plumbers</option>
+                            <option value="handyman">Handyman Services</option>
+                            <option value="hvac">HVAC Services</option>
+                            <option value="roofing">Roofing</option>
+                            <option value="landscaping">Landscaping</option>
+                            <option value="auto repair">Auto Repair</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; align-items: center; gap: 20px;">
+                    <button type="submit" class="btn" id="searchBtn">Search Businesses</button>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="useGoogle" checked style="width: auto;">
+                        <span>Use Google Maps (Free)</span>
+                    </label>
+                </div>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px;">Searching for businesses...<br><small>This may take 30-60 seconds for real data</small></p>
+            </div>
+            
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="results-card" id="results">
+            <div class="results-header">
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalFound">0</div>
+                        <div class="stat-label">Total Found</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="withoutWebsites">0</div>
+                        <div class="stat-label">Without Websites</div>
+                    </div>
+                </div>
+                <!-- Export buttons removed -->
+            </div>
+            
+            <!-- Export section removed -->
+            
+            <div class="business-list" id="businessList">
+                <!-- Test display -->
+                <div style="padding: 20px; background: #2a2a2a; border: 1px solid #404040; margin: 16px 0; border-radius: 8px;">
+                    <p style="color: #888;"><strong style="color: #ccc;">Debug Info:</strong> If you don't see businesses here after a search, check the browser console (F12) for error messages.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentResults = [];
+        
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const searchData = {
+                city: formData.get('city'),
+                state: formData.get('state').toUpperCase(),
+                radius: parseInt(formData.get('radius')),
+                category: formData.get('category'),
+                use_google: document.getElementById('useGoogle').checked
+            };
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('searchBtn').disabled = true;
+            
+            try {
+                // Increase timeout for scraping
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes
+                
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(searchData),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                const data = await response.json();
+                console.log('Server response:', data);
+                
+                if (response.ok && data.success) {
+                    currentResults = data.businesses;
+                    console.log('Current results:', currentResults);
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+            } catch (err) {
+                showError('Network error. Please try again.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchBtn').disabled = false;
+            }
+        });
+        
+        // Export functionality removed
+        
+        function displayResults(data) {
+            console.log('displayResults called with:', data);
+            
+            document.getElementById('totalFound').textContent = data.total_found;
+            document.getElementById('withoutWebsites').textContent = data.without_websites;
+            
+            const listContainer = document.getElementById('businessList');
+            listContainer.innerHTML = '';
+            
+            console.log('Number of businesses to display:', data.businesses.length);
+            
+            if (data.businesses.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #666;">No businesses found in this area.</p>';
+            } else {
+                data.businesses.forEach((business, index) => {
+                    console.log(`Processing business ${index + 1}:`, business);
+                    const item = document.createElement('div');
+                    item.className = business.has_website ? 'business-item' : 'business-item no-website';
+                    item.innerHTML = `
+                        <div class="business-name">
+                            ${business.name}
+                            ${!business.has_website ? '<span class="no-website-badge">No Website</span>' : ''}
+                        </div>
+                        <div class="business-details">
+                            <div class="detail-item">📞 ${business.phone}</div>
+                            <div class="detail-item">📍 ${business.address || 'Address not available'}</div>
+                            <div class="detail-item">🏷️ ${business.categories || 'General'}</div>
+                            <div class="detail-item">⭐ ${business.rating} (${business.review_count} reviews)</div>
+                        </div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+            
+            document.getElementById('results').style.display = 'block';
+            console.log('Results section should now be visible');
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = `Error: ${message}`;
+            errorEl.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
